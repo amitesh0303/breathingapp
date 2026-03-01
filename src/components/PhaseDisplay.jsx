@@ -18,7 +18,7 @@ export default function PhaseDisplay({ playing, phase, phaseTimeLeft, phaseDurat
       <Text style={styles.phaseName}>{PHASE_LABELS[phase]}</Text>
       <Text style={styles.phaseTimer}>{phaseTimeLeft}s</Text>
       <View style={styles.barWrap}>
-        <View style={[styles.bar, { width: `${Math.min(phaseProgress * 100, 100)}%` }]} />
+        <View style={[styles.bar, { width: Math.min(phaseProgress, 1) * 180 }]} />
       </View>
     </View>
   );

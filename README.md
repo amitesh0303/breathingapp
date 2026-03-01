@@ -20,7 +20,7 @@ A calming breathing and meditation timer app built with React Native and Expo.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20+)
 - [Expo Go](https://expo.dev/go) app on your iOS or Android device
 
 ### Install & Run
