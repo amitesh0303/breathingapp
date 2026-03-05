@@ -1,44 +1,48 @@
-# Breathing & Meditation Timer
+# Breathe — Breathing & Meditation Timer
 
-A calming breathing and meditation timer app built with React + Vite.
+A calming breathing and meditation timer app built with React Native and Expo.
 
 ## Features
 
-- **Abstract lung visualizer** — Two clusters of translucent, softly glowing circles rendered on HTML Canvas, inspired by popular "breath ball" apps
-- **Floating light orbs** — Small glowing balls inside each lung animate along curved paths to represent airflow
-- **Animated breath cycle guidance**:
-  - **Inhale** — Lungs expand, balls move inward and upward, glow brightens
-  - **Hold** — Lungs stay at maximum size, balls pulse gently
-  - **Exhale** — Lungs smoothly shrink, balls drift outward and downward, glow fades
+- **Animated lung visualizer** — Two clusters of translucent, softly glowing circles with floating light orbs representing airflow
+- **Smooth breath cycle animation**:
+  - **Inhale** — Lungs expand, glow brightens
+  - **Hold** — Lungs stay at size, orbs drift gently
+  - **Exhale** — Lungs shrink, glow fades
 - **Three breathing patterns**:
   - 4-7-8 Breathing (Inhale 4s – Hold 7s – Exhale 8s)
   - Box Breathing (Inhale 4s – Hold 4s – Exhale 4s – Hold 4s)
   - Relaxed (Inhale 4s – Hold 2s – Exhale 6s)
-- **Clean UI** — Phase name, countdown timer, progress bar, and rounded play/pause button
-- **Dark gradient background** — Deep blue/purple with soft diffused lighting
-- **Soft colors** — Teal, cyan, and lavender palette; no sharp edges or clutter
-
-## Preview
-
-![Breathing App](https://github.com/user-attachments/assets/b32311f0-91fa-4fd2-a963-0c7963f602cd)
+- **Clean UI** — Phase name, countdown timer, progress bar, and play/pause button
+- **Dark background** — Deep blue theme with soft teal/cyan/lavender palette
 
 ## Getting Started
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v20+)
+- [Expo Go](https://expo.dev/go) app on your iOS or Android device
+
+### Install & Run
+
 ```bash
 npm install
-npm run dev
+npm start
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your device.
 
-## Build
+### Run on Specific Platforms
 
 ```bash
-npm run build
+npm run android   # Android
+npm run ios       # iOS (macOS only)
+npm run web       # Web browser
 ```
 
 ## Tech Stack
 
-- [React](https://react.dev/) — UI components
-- [Vite](https://vitejs.dev/) — Build tool
-- HTML Canvas API — Smooth, frame-accurate lung animation
+- [React Native](https://reactnative.dev/) — Mobile UI framework
+- [Expo](https://expo.dev/) — Development platform and tooling
+- [react-native-svg](https://github.com/software-mansion/react-native-svg) — SVG icons for play/pause controls
+- [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context) — Safe area handling for notches and home indicators
