@@ -1,0 +1,26 @@
+{
+  "project_type": "Expo React Native breathing/meditation app",
+  "language": "JavaScript (JSX)",
+  "build_system": "Expo CLI with Metro bundler, npm for package management",
+  "test_framework": "None currently configured",
+  "build_command": "cd /projects/sandbox/breathingapp && npx expo export --platform web",
+  "test_command": "No tests configured - verify via expo export",
+  "verification_instructions": "1. Run npm install to install dependencies. 2. Run npx expo export --platform web to verify the bundle compiles without errors.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd /projects/sandbox/breathingapp && npm install",
+  "environment_constraints": "OPEN_INTERNET - full npm access available. Node.js v22 available via nvm. No physical device or emulator available for testing - rely on web export for build verification.",
+  "contribution_requirements": "No CONTRIBUTING.md present. Standard Expo conventions apply.",
+  "key_patterns": "Single App.js entry point using registerRootComponent. Components in src/components/ as .jsx files. Constants in src/constants/. Uses react-native-safe-area-context and react-native-svg. Dark theme with teal/cyan accent colors. Animated API for animations.",
+  "relevant_files": [
+    "App.js",
+    "index.js",
+    "app.json",
+    "package.json",
+    "babel.config.js",
+    "src/constants/patterns.js",
+    "src/components/BreathingVisual.jsx",
+    "src/components/PhaseDisplay.jsx",
+    "src/components/Controls.jsx"
+  ],
+  "directory_structure": "Root: App.js (main), index.js (entry), app.json (expo config), package.json. src/components/ has 3 components (BreathingVisual, PhaseDisplay, Controls). src/constants/ has patterns.js with breathing pattern data. assets/ has icons."
+}

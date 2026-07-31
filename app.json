@@ -3,6 +3,7 @@
     "name": "Breathe",
     "slug": "breathingapp",
     "version": "1.0.0",
+    "scheme": "breathingapp",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -27,6 +28,10 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ]
   }
 }
