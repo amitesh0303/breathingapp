@@ -130,10 +130,6 @@ export function SessionProvider({ children }) {
   }, [sessions]);
 
   useEffect(() => {
-    achievementsRef.current = achievements;
-  }, [achievements]);
-
-  useEffect(() => {
     loadData();
   }, []);
 
@@ -172,11 +168,13 @@ export function SessionProvider({ children }) {
       return updatedSessions;
     });
 
-    // Use ref for achievements to get the latest value
+    // Use ref for achievements to get the latest value and update inline to avoid timing window
     const currentAchievements = achievementsRef.current;
     const currentSessions = [...sessionsRef.current, newSession];
     const { currentStreak } = calculateStreak(currentSessions);
     const updatedAchievements = checkAchievements(currentSessions, currentStreak, currentAchievements);
+    // Update ref inline before setAchievements to prevent duplicate grants on rapid calls
+    achievementsRef.current = updatedAchievements;
     setAchievements(updatedAchievements);
 
     try {
@@ -211,9 +209,21 @@ export function SessionProvider({ children }) {
     return achievements;
   }, [achievements]);
 
+  const reset = useCallback(async () => {
+    setSessions([]);
+    setAchievements([]);
+    sessionsRef.current = [];
+    achievementsRef.current = [];
+    try {
+      await AsyncStorage.multiRemove([SESSION_HISTORY_KEY, ACHIEVEMENTS_KEY]);
+    } catch (error) {
+      // non-critical
+    }
+  }, []);
+
   const value = useMemo(
-    () => ({ sessions, addSession, getStats, getAchievements, achievements }),
-    [sessions, addSession, getStats, getAchievements, achievements]
+    () => ({ sessions, addSession, getStats, getAchievements, achievements, reset }),
+    [sessions, addSession, getStats, getAchievements, achievements, reset]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

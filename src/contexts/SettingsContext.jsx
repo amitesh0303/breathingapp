@@ -39,8 +39,17 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
+  const reset = useCallback(async () => {
+    setSettings(defaultSettings);
+    try {
+      await AsyncStorage.removeItem(SETTINGS_STORAGE_KEY);
+    } catch (error) {
+      // non-critical
+    }
+  }, []);
+
   return (
-    <SettingsContext.Provider value={{ settings, updateSetting }}>
+    <SettingsContext.Provider value={{ settings, updateSetting, reset }}>
       {children}
     </SettingsContext.Provider>
   );

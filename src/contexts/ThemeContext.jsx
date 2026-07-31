@@ -34,10 +34,19 @@ export function ThemeProvider({ children }) {
     }
   }, [isDark]);
 
+  const reset = useCallback(async () => {
+    setIsDark(true);
+    try {
+      await AsyncStorage.removeItem(THEME_STORAGE_KEY);
+    } catch (error) {
+      // non-critical
+    }
+  }, []);
+
   const theme = isDark ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark, toggleTheme, reset }}>
       {children}
     </ThemeContext.Provider>
   );

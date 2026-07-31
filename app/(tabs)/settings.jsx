@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, Switch, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import GradientBackground from '../../src/components/ui/GradientBackground';
 import GlassCard from '../../src/components/ui/GlassCard';
@@ -8,6 +9,7 @@ import AnimatedButton from '../../src/components/ui/AnimatedButton';
 import { Heading, Subheading, Body, Caption } from '../../src/components/ui/Typography';
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { useSettings } from '../../src/contexts/SettingsContext';
+import { useSession } from '../../src/contexts/SessionContext';
 
 function SettingRow({ label, description, children, theme }) {
   return (
@@ -35,8 +37,10 @@ const settingRowStyles = StyleSheet.create({
 });
 
 export default function SettingsScreen() {
-  const { theme, isDark, toggleTheme } = useTheme();
-  const { settings, updateSetting } = useSettings();
+  const { theme, isDark, toggleTheme, reset: resetTheme } = useTheme();
+  const { settings, updateSetting, reset: resetSettings } = useSettings();
+  const { reset: resetSessions } = useSession();
+  const router = useRouter();
 
   const handleResetData = () => {
     Alert.alert(
@@ -49,14 +53,15 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Only remove app-owned keys instead of clearing all AsyncStorage
-              await AsyncStorage.multiRemove([
-                '@session_history',
-                '@achievements',
-                '@theme_preference',
-                '@settings',
-                '@onboarding_complete',
+              // Clear in-memory state and AsyncStorage via each provider's reset
+              await Promise.all([
+                resetSessions(),
+                resetSettings(),
+                resetTheme(),
+                AsyncStorage.removeItem('@onboarding_complete'),
               ]);
+              // Navigate to onboarding since onboarding_complete was cleared
+              router.replace('/onboarding');
             } catch (e) {
               // non-critical
             }

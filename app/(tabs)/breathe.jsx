@@ -52,6 +52,8 @@ export default function BreatheScreen() {
   const [encouragement, setEncouragement] = useState('');
 
   const intervalRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const pausedElapsedRef = useRef(0);
   const phaseIndexRef = useRef(0);
   const modalScaleAnim = useRef(new Animated.Value(0)).current;
   const modalOpacityAnim = useRef(new Animated.Value(0)).current;
@@ -98,6 +100,8 @@ export default function BreatheScreen() {
     setPlaying(true);
     setSessionComplete(false);
     setTotalElapsed(0);
+    pausedElapsedRef.current = 0;
+    startTimeRef.current = Date.now();
     phaseIndexRef.current = 0;
 
     const activePhases = getActivePhases();
@@ -110,6 +114,8 @@ export default function BreatheScreen() {
     setPlaying(false);
     setSessionComplete(false);
     setTotalElapsed(0);
+    pausedElapsedRef.current = 0;
+    startTimeRef.current = null;
     phaseIndexRef.current = 0;
 
     const activePhases = getActivePhases();
@@ -160,9 +166,14 @@ export default function BreatheScreen() {
       if (totalElapsed === 0) {
         startSession();
       } else {
+        // Resuming: re-anchor start time accounting for already elapsed time
+        pausedElapsedRef.current = totalElapsed;
+        startTimeRef.current = Date.now();
         setPlaying(true);
       }
     } else {
+      // Pausing: save current elapsed to ref
+      pausedElapsedRef.current = totalElapsed;
       setPlaying(false);
     }
   };
@@ -193,15 +204,15 @@ export default function BreatheScreen() {
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setTotalElapsed((prev) => {
-          const newElapsed = prev + 1;
-          // Derive phase deterministically from elapsed time to avoid phase-skip bugs
-          const { phase, timeLeft, phaseIdx } = derivePhaseFromElapsed(newElapsed);
-          setCurrentPhase(phase);
-          setPhaseTimeLeft(Math.ceil(timeLeft));
-          phaseIndexRef.current = phaseIdx;
-          return newElapsed;
-        });
+        // Compute elapsed from wall-clock time to avoid drift when backgrounded
+        const realElapsed = pausedElapsedRef.current + Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setTotalElapsed(realElapsed);
+
+        // Derive phase deterministically from elapsed time to avoid phase-skip bugs
+        const { phase, timeLeft, phaseIdx } = derivePhaseFromElapsed(realElapsed);
+        setCurrentPhase(phase);
+        setPhaseTimeLeft(Math.ceil(timeLeft));
+        phaseIndexRef.current = phaseIdx;
       }, 1000);
     } else {
       if (intervalRef.current) {
