@@ -9,7 +9,7 @@ try {
   BlurView = null;
 }
 
-export default function GlassCard({ children, style, intensity = 30 }) {
+export default function GlassCard({ children, style, intensity = 30, accessible, accessibilityLabel }) {
   const { theme, isDark } = useTheme();
 
   const cardBackground = isDark
@@ -29,9 +29,13 @@ export default function GlassCard({ children, style, intensity = 30 }) {
     style,
   ];
 
+  const a11yProps = {};
+  if (accessible != null) a11yProps.accessible = accessible;
+  if (accessibilityLabel) a11yProps.accessibilityLabel = accessibilityLabel;
+
   if (BlurView && Platform.OS !== 'web') {
     return (
-      <View style={containerStyle}>
+      <View style={containerStyle} {...a11yProps}>
         <BlurView
           intensity={intensity}
           tint={isDark ? 'dark' : 'light'}
@@ -45,7 +49,7 @@ export default function GlassCard({ children, style, intensity = 30 }) {
   }
 
   return (
-    <View style={[containerStyle, { backgroundColor: cardBackground }]}>
+    <View style={[containerStyle, { backgroundColor: cardBackground }]} {...a11yProps}>
       <View style={styles.content}>{children}</View>
     </View>
   );

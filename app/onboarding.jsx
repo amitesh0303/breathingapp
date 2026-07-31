@@ -90,6 +90,7 @@ export default function OnboardingScreen() {
             variant="primary"
             onPress={handleGetStarted}
             style={styles.button}
+            accessibilityLabel="Get started with Breathe app"
           />
         </Animated.View>
       </SafeAreaView>

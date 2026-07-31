@@ -78,6 +78,8 @@ export default function SettingsScreen() {
                 onValueChange={toggleTheme}
                 trackColor={{ false: '#767577', true: theme.colors.primary }}
                 thumbColor="#ffffff"
+                accessibilityLabel="Toggle dark mode"
+                accessibilityRole="switch"
               />
             </SettingRow>
           </GlassCard>
@@ -91,6 +93,8 @@ export default function SettingsScreen() {
                 onValueChange={(val) => updateSetting('hapticsEnabled', val)}
                 trackColor={{ false: '#767577', true: theme.colors.primary }}
                 thumbColor="#ffffff"
+                accessibilityLabel="Toggle haptic feedback"
+                accessibilityRole="switch"
               />
             </SettingRow>
             <View style={styles.separator} />
@@ -100,6 +104,8 @@ export default function SettingsScreen() {
                 onValueChange={(val) => updateSetting('soundEnabled', val)}
                 trackColor={{ false: '#767577', true: theme.colors.primary }}
                 thumbColor="#ffffff"
+                accessibilityLabel="Toggle sound"
+                accessibilityRole="switch"
               />
             </SettingRow>
           </GlassCard>

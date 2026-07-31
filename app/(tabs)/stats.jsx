@@ -109,7 +109,12 @@ export default function StatsScreen() {
               const unlocked = unlockedIds.has(ach.id);
               const iconName = ACHIEVEMENT_ICONS[ach.icon] || 'star';
               return (
-                <GlassCard key={ach.id} style={styles.achievementCard}>
+                <GlassCard
+                  key={ach.id}
+                  style={styles.achievementCard}
+                  accessible={true}
+                  accessibilityLabel={`Achievement: ${ach.title}, ${ach.description}${unlocked ? ', unlocked' : ', locked'}`}
+                >
                   <Ionicons
                     name={iconName}
                     size={28}

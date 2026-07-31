@@ -11,6 +11,8 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarShowLabel: true,
+        animation: 'shift',
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,

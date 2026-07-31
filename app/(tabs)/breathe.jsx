@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Animated, Dimensions } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import GradientBackground from '../../src/components/ui/GradientBackground';
+import GlassCard from '../../src/components/ui/GlassCard';
 import ProgressRing from '../../src/components/ui/ProgressRing';
+import AnimatedButton from '../../src/components/ui/AnimatedButton';
 import { Subheading, Body, Caption } from '../../src/components/ui/Typography';
 import EnhancedBreathingVisual from '../../src/components/breathing/EnhancedBreathingVisual';
 import PatternCard from '../../src/components/breathing/PatternCard';
@@ -20,6 +23,17 @@ const DURATION_OPTIONS = [
   { label: '\u221E', value: 0 },
 ];
 
+const ENCOURAGEMENT_MESSAGES = [
+  'Your mind and body thank you for this moment of calm.',
+  'Every breath is a step toward inner peace.',
+  'Consistency builds resilience. Great work!',
+  'You showed up for yourself today. That matters.',
+  'A calm mind is a powerful mind. Keep going!',
+  'Breathe in confidence, breathe out doubt.',
+];
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function BreatheScreen() {
   const params = useLocalSearchParams();
   const { theme } = useTheme();
@@ -32,10 +46,13 @@ export default function BreatheScreen() {
   const [phaseTimeLeft, setPhaseTimeLeft] = useState(0);
   const [totalElapsed, setTotalElapsed] = useState(0);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [encouragement, setEncouragement] = useState('');
 
   const intervalRef = useRef(null);
   const phaseIndexRef = useRef(0);
   const phaseTimerRef = useRef(0);
+  const modalScaleAnim = useRef(new Animated.Value(0)).current;
+  const modalOpacityAnim = useRef(new Animated.Value(0)).current;
 
   const pattern = PATTERNS[selectedPattern] || PATTERNS['4-7-8'];
 
@@ -72,7 +89,21 @@ export default function BreatheScreen() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, [pattern, getActivePhases]);
+
+    // Animate modal out
+    Animated.parallel([
+      Animated.timing(modalScaleAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(modalOpacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [pattern, getActivePhases, modalScaleAnim, modalOpacityAnim]);
 
   const handlePlayPause = () => {
     if (sessionComplete) {
@@ -89,6 +120,28 @@ export default function BreatheScreen() {
       setPlaying(false);
     }
   };
+
+  // Animate modal in when session completes
+  useEffect(() => {
+    if (sessionComplete) {
+      const randomMsg = ENCOURAGEMENT_MESSAGES[Math.floor(Math.random() * ENCOURAGEMENT_MESSAGES.length)];
+      setEncouragement(randomMsg);
+
+      Animated.parallel([
+        Animated.spring(modalScaleAnim, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(modalOpacityAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [sessionComplete, modalScaleAnim, modalOpacityAnim]);
 
   // Tick every second
   useEffect(() => {
@@ -153,6 +206,14 @@ export default function BreatheScreen() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const formatDuration = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m === 0) return `${s} seconds`;
+    if (s === 0) return `${m} minute${m > 1 ? 's' : ''}`;
+    return `${m}m ${s}s`;
+  };
+
   const patternKeys = Object.keys(PATTERNS);
 
   return (
@@ -171,7 +232,12 @@ export default function BreatheScreen() {
               duration={phaseDuration}
             />
             {/* Phase label overlay */}
-            <View style={styles.phaseOverlay}>
+            <View
+              style={styles.phaseOverlay}
+              accessible={true}
+              accessibilityLabel={`Current phase: ${PHASE_LABELS[currentPhase]}, ${phaseTimeLeft} seconds remaining`}
+              accessibilityRole="text"
+            >
               <Text style={[styles.phaseText, { color: theme.colors.text }]}>
                 {PHASE_LABELS[currentPhase]}
               </Text>
@@ -190,15 +256,6 @@ export default function BreatheScreen() {
             </View>
           )}
 
-          {/* Session Complete */}
-          {sessionComplete && (
-            <View style={styles.completeSection}>
-              <Text style={[styles.completeText, { color: theme.colors.success }]}>
-                Session Complete!
-              </Text>
-            </View>
-          )}
-
           {/* Controls */}
           <SessionControls
             playing={playing}
@@ -211,8 +268,15 @@ export default function BreatheScreen() {
             <Caption style={styles.sectionLabel}>Duration</Caption>
             <View style={styles.durationRow}>
               {DURATION_OPTIONS.map((opt) => (
-                <View
+                <TouchableOpacity
                   key={opt.value}
+                  onPress={() => {
+                    if (!playing) setSelectedDuration(opt.value);
+                  }}
+                  disabled={playing}
+                  accessibilityLabel={`Select ${opt.label} duration`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedDuration === opt.value }}
                   style={[
                     styles.durationBtn,
                     {
@@ -237,13 +301,10 @@ export default function BreatheScreen() {
                             : theme.colors.textSecondary,
                       },
                     ]}
-                    onPress={() => {
-                      if (!playing) setSelectedDuration(opt.value);
-                    }}
                   >
                     {opt.label}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -275,6 +336,61 @@ export default function BreatheScreen() {
 
           <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* Session Complete Overlay */}
+        {sessionComplete && (
+          <Animated.View
+            style={[
+              styles.modalOverlay,
+              { opacity: modalOpacityAnim },
+            ]}
+          >
+            <Animated.View
+              style={[
+                styles.modalContent,
+                {
+                  transform: [{ scale: modalScaleAnim }],
+                },
+              ]}
+            >
+              <GlassCard style={styles.modalCard}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={64}
+                  color={theme.colors.success}
+                  style={styles.modalIcon}
+                />
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                  Well Done!
+                </Text>
+                <View style={styles.modalStats}>
+                  <View style={styles.modalStatRow}>
+                    <Caption>Duration</Caption>
+                    <Text style={[styles.modalStatValue, { color: theme.colors.primary }]}>
+                      {formatDuration(totalElapsed)}
+                    </Text>
+                  </View>
+                  <View style={styles.modalStatRow}>
+                    <Caption>Pattern</Caption>
+                    <Text style={[styles.modalStatValue, { color: theme.colors.primary }]}>
+                      {pattern.label || selectedPattern}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.modalEncouragement, { color: theme.colors.textMuted }]}>
+                  {encouragement}
+                </Text>
+                <AnimatedButton
+                  title="Done"
+                  variant="primary"
+                  onPress={resetSession}
+                  style={styles.modalButton}
+                  accessibilityLabel="Dismiss session complete and reset"
+                />
+              </GlassCard>
+            </Animated.View>
+          </Animated.View>
+        )}
       </SafeAreaView>
     </GradientBackground>
   );
@@ -313,14 +429,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
-  completeSection: {
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  completeText: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
   durationSection: {
     width: '100%',
     paddingHorizontal: 20,
@@ -342,6 +450,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   durationText: {
     fontSize: 14,
@@ -354,5 +463,55 @@ const styles = StyleSheet.create({
   },
   patternScroll: {
     paddingRight: 20,
+  },
+  // Modal styles
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  modalContent: {
+    width: SCREEN_WIDTH * 0.85,
+    maxWidth: 360,
+  },
+  modalCard: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+  },
+  modalIcon: {
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 20,
+  },
+  modalStats: {
+    width: '100%',
+    marginBottom: 16,
+    gap: 8,
+  },
+  modalStatRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  modalStatValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalEncouragement: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+    paddingHorizontal: 8,
+  },
+  modalButton: {
+    width: '100%',
   },
 });
