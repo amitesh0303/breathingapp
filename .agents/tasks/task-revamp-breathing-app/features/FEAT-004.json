@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Final polish pass: ensure all screens integrate cleanly, add smooth page transitions, verify all features work together, add accessibility labels, and commit all changes to the feature branch.",
+  "status": "pending",
+  "steps": [
+    "Add screen transition animations in the Stack and Tab navigators (fade for stack, slide for tabs)",
+    "Add accessibility labels and roles to all interactive elements (buttons, toggles, cards)",
+    "Ensure the SessionContext correctly records sessions when the breathing timer completes a full session",
+    "Add a session-complete modal/overlay that shows duration, pattern used, and encouragement message after finishing a session",
+    "Verify all imports and cross-references between files are correct",
+    "Run npx expo export --platform web to verify final build succeeds",
+    "Stage and commit all changes to the revamp/expo-ui-ux branch with a descriptive commit message"
+  ],
+  "acceptance_criteria": [
+    "All screens have smooth transitions",
+    "All interactive elements have accessibility labels",
+    "Sessions are recorded to history when completed",
+    "Session complete overlay appears after finishing a session",
+    "npx expo export --platform web succeeds with zero errors",
+    "All changes are committed to revamp/expo-ui-ux branch"
+  ],
+  "verification": [
+    "Run npx expo export --platform web and confirm exit code 0",
+    "Run git log --oneline -5 to confirm commits are on the feature branch"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

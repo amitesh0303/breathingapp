@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Set up project infrastructure for the revamp: install new dependencies (expo-router for navigation, expo-linear-gradient, expo-haptics, @react-native-async-storage/async-storage, react-native-reanimated, expo-blur), create feature branch, configure expo-router file-based routing, and establish the new directory structure.",
+  "status": "completed",
+  "steps": [
+    "Create git branch 'revamp/expo-ui-ux' from main",
+    "Install dependencies: expo-router expo-linear-gradient expo-haptics @react-native-async-storage/async-storage react-native-reanimated expo-blur expo-font @expo/vector-icons react-native-gesture-handler",
+    "Update app.json to configure expo-router (set scheme, add web bundler metro, set entry point)",
+    "Update babel.config.js to include react-native-reanimated/plugin",
+    "Create the new directory structure: app/ (for expo-router pages), src/components/, src/constants/, src/contexts/, src/hooks/, src/utils/, src/styles/",
+    "Create app/_layout.jsx as the root layout with Stack navigator and global providers",
+    "Create a basic app/index.jsx that renders a placeholder home screen to verify routing works",
+    "Update package.json main entry to use expo-router",
+    "Run npx expo export --platform web to verify the project compiles"
+  ],
+  "acceptance_criteria": [
+    "All new dependencies install without errors",
+    "expo-router file-based routing is configured and compiles",
+    "The new directory structure is in place",
+    "npx expo export --platform web succeeds without errors"
+  ],
+  "verification": [
+    "Run npm install and confirm exit code 0",
+    "Run npx expo export --platform web and confirm exit code 0"
+  ],
+  "blocked_reason": null,
+  "findings": "react-native-web and react-dom were also required for web export verification (not listed in original deps but necessary). Installed via npx expo install for SDK compatibility. Node v22.23.1 used via nvm. Build output goes to dist/ directory (not committed). The .agents/ directory is untracked and not committed."
+}

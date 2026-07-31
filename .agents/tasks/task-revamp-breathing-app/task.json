@@ -1,0 +1,7 @@
+{
+  "task_id": "task-revamp-breathing-app",
+  "task_description": "Complete revamp of the Expo breathing app with multi-screen navigation, modern UI/UX with glassmorphism and gradients, session tracking, achievements, multiple breathing patterns, theme support, haptic feedback, and polished animations.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}
