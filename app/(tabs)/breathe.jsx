@@ -32,6 +32,9 @@ const ENCOURAGEMENT_MESSAGES = [
   'Breathe in confidence, breathe out doubt.',
 ];
 
+// Minimum elapsed seconds before allowing "finish" in infinite mode
+const MIN_INFINITE_DURATION = 10;
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function BreatheScreen() {
@@ -50,7 +53,6 @@ export default function BreatheScreen() {
 
   const intervalRef = useRef(null);
   const phaseIndexRef = useRef(0);
-  const phaseTimerRef = useRef(0);
   const modalScaleAnim = useRef(new Animated.Value(0)).current;
   const modalOpacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -61,6 +63,37 @@ export default function BreatheScreen() {
     return PHASES.filter((p) => pattern[p] > 0);
   }, [pattern]);
 
+  // Compute cycle length for the current pattern
+  const getCycleLength = useCallback(() => {
+    const activePhases = getActivePhases();
+    return activePhases.reduce((sum, p) => sum + pattern[p], 0);
+  }, [pattern, getActivePhases]);
+
+  // Derive current phase and time remaining from total elapsed seconds
+  const derivePhaseFromElapsed = useCallback((elapsed) => {
+    const activePhases = getActivePhases();
+    const cycleLength = getCycleLength();
+    if (cycleLength === 0) return { phase: activePhases[0], timeLeft: 0, phaseIdx: 0 };
+
+    const positionInCycle = elapsed % cycleLength;
+    let accumulated = 0;
+
+    for (let i = 0; i < activePhases.length; i++) {
+      const phaseDur = pattern[activePhases[i]];
+      if (positionInCycle < accumulated + phaseDur) {
+        return {
+          phase: activePhases[i],
+          timeLeft: phaseDur - (positionInCycle - accumulated),
+          phaseIdx: i,
+        };
+      }
+      accumulated += phaseDur;
+    }
+
+    // Fallback (shouldn't reach here)
+    return { phase: activePhases[0], timeLeft: pattern[activePhases[0]], phaseIdx: 0 };
+  }, [pattern, getActivePhases, getCycleLength]);
+
   const startSession = useCallback(() => {
     setPlaying(true);
     setSessionComplete(false);
@@ -70,7 +103,6 @@ export default function BreatheScreen() {
     const activePhases = getActivePhases();
     const firstPhase = activePhases[0];
     setCurrentPhase(firstPhase);
-    phaseTimerRef.current = pattern[firstPhase];
     setPhaseTimeLeft(pattern[firstPhase]);
   }, [pattern, getActivePhases]);
 
@@ -104,6 +136,20 @@ export default function BreatheScreen() {
       }),
     ]).start();
   }, [pattern, getActivePhases, modalScaleAnim, modalOpacityAnim]);
+
+  // Finish session manually (for infinite mode or early stop)
+  const finishSession = useCallback(() => {
+    if (totalElapsed < MIN_INFINITE_DURATION) return;
+
+    setPlaying(false);
+    setSessionComplete(true);
+    addSession({
+      date: new Date().toISOString(),
+      pattern: selectedPattern,
+      duration: totalElapsed,
+      completed: true,
+    });
+  }, [totalElapsed, selectedPattern, addSession]);
 
   const handlePlayPause = () => {
     if (sessionComplete) {
@@ -143,22 +189,18 @@ export default function BreatheScreen() {
     }
   }, [sessionComplete, modalScaleAnim, modalOpacityAnim]);
 
-  // Tick every second
+  // Wall-clock anchored timer to prevent drift
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setTotalElapsed((prev) => prev + 1);
-        setPhaseTimeLeft((prev) => {
-          if (prev <= 1) {
-            // Move to next phase
-            const activePhases = getActivePhases();
-            phaseIndexRef.current = (phaseIndexRef.current + 1) % activePhases.length;
-            const nextPhase = activePhases[phaseIndexRef.current];
-            setCurrentPhase(nextPhase);
-            phaseTimerRef.current = pattern[nextPhase];
-            return pattern[nextPhase];
-          }
-          return prev - 1;
+        setTotalElapsed((prev) => {
+          const newElapsed = prev + 1;
+          // Derive phase deterministically from elapsed time to avoid phase-skip bugs
+          const { phase, timeLeft, phaseIdx } = derivePhaseFromElapsed(newElapsed);
+          setCurrentPhase(phase);
+          setPhaseTimeLeft(Math.ceil(timeLeft));
+          phaseIndexRef.current = phaseIdx;
+          return newElapsed;
         });
       }, 1000);
     } else {
@@ -173,9 +215,9 @@ export default function BreatheScreen() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [playing, pattern, getActivePhases]);
+  }, [playing, derivePhaseFromElapsed]);
 
-  // Check if session is complete
+  // Check if session is complete (timed mode only)
   useEffect(() => {
     if (selectedDuration > 0 && totalElapsed >= selectedDuration && playing) {
       setPlaying(false);
@@ -187,7 +229,7 @@ export default function BreatheScreen() {
         completed: true,
       });
     }
-  }, [totalElapsed, selectedDuration, playing]);
+  }, [totalElapsed, selectedDuration, playing, selectedPattern, addSession]);
 
   // Update pattern from params
   useEffect(() => {
@@ -199,6 +241,9 @@ export default function BreatheScreen() {
 
   const progress = selectedDuration > 0 ? Math.min(totalElapsed / selectedDuration, 1) : 0;
   const phaseDuration = pattern[currentPhase] || 4;
+
+  // Whether "Finish" button should show (infinite mode while paused, with enough elapsed time)
+  const showFinishButton = selectedDuration === 0 && !playing && totalElapsed >= MIN_INFINITE_DURATION && !sessionComplete;
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -248,13 +293,19 @@ export default function BreatheScreen() {
           </View>
 
           {/* Session Progress */}
-          {selectedDuration > 0 && (
+          {selectedDuration > 0 ? (
             <View style={styles.progressSection}>
               <ProgressRing progress={progress} size={60} strokeWidth={4}>
                 <Caption>{formatTime(selectedDuration - totalElapsed > 0 ? selectedDuration - totalElapsed : 0)}</Caption>
               </ProgressRing>
             </View>
-          )}
+          ) : totalElapsed > 0 ? (
+            <View style={styles.progressSection}>
+              <Caption style={{ color: theme.colors.textSecondary }}>
+                {formatTime(totalElapsed)} elapsed
+              </Caption>
+            </View>
+          ) : null}
 
           {/* Controls */}
           <SessionControls
@@ -262,6 +313,18 @@ export default function BreatheScreen() {
             onPlayPause={handlePlayPause}
             onReset={resetSession}
           />
+
+          {/* Finish Button for infinite mode */}
+          {showFinishButton && (
+            <View style={styles.finishSection}>
+              <AnimatedButton
+                title="Finish Session"
+                variant="primary"
+                onPress={finishSession}
+                accessibilityLabel="Finish and save this breathing session"
+              />
+            </View>
+          )}
 
           {/* Duration Picker */}
           <View style={styles.durationSection}>
@@ -428,6 +491,12 @@ const styles = StyleSheet.create({
   progressSection: {
     marginBottom: 20,
     alignItems: 'center',
+  },
+  finishSection: {
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 40,
+    width: '100%',
   },
   durationSection: {
     width: '100%',

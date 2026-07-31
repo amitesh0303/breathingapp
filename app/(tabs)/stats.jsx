@@ -8,18 +8,7 @@ import { Heading, Subheading, Body, Caption } from '../../src/components/ui/Typo
 import { useTheme } from '../../src/contexts/ThemeContext';
 import { useSession } from '../../src/contexts/SessionContext';
 import { PATTERNS } from '../../src/constants/patterns';
-
-const ACHIEVEMENT_ICONS = {
-  star: 'star',
-  flame: 'flame',
-  trophy: 'trophy',
-  crown: 'ribbon',
-  medal: 'medal',
-  sunrise: 'sunny',
-  moon: 'moon',
-  clock: 'time',
-  rocket: 'rocket',
-};
+import { ACHIEVEMENT_DEFINITIONS, ACHIEVEMENT_ICONS } from '../../src/constants/achievements';
 
 export default function StatsScreen() {
   const { theme } = useTheme();
@@ -31,17 +20,7 @@ export default function StatsScreen() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 20);
 
-  const allAchievements = [
-    { id: 'first_session', title: 'First Breath', description: 'Complete your first session', icon: 'star' },
-    { id: 'three_day_streak', title: 'Three Day Flow', description: '3-day streak', icon: 'flame' },
-    { id: 'seven_day_streak', title: 'Weekly Warrior', description: '7-day streak', icon: 'trophy' },
-    { id: 'thirty_day_streak', title: 'Monthly Master', description: '30-day streak', icon: 'crown' },
-    { id: 'hundred_sessions', title: 'Century Club', description: '100 sessions', icon: 'medal' },
-    { id: 'early_bird', title: 'Early Bird', description: 'Session before 7am', icon: 'sunrise' },
-    { id: 'night_owl', title: 'Night Owl', description: 'Session after 10pm', icon: 'moon' },
-    { id: 'five_minutes', title: 'Deep Focus', description: '5+ minute session', icon: 'clock' },
-    { id: 'marathon', title: 'Marathon Breather', description: '10+ minute session', icon: 'rocket' },
-  ];
+  const allAchievements = ACHIEVEMENT_DEFINITIONS;
 
   const unlockedIds = new Set(achievements.map((a) => a.id));
 

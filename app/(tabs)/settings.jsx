@@ -49,7 +49,14 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await AsyncStorage.clear();
+              // Only remove app-owned keys instead of clearing all AsyncStorage
+              await AsyncStorage.multiRemove([
+                '@session_history',
+                '@achievements',
+                '@theme_preference',
+                '@settings',
+                '@onboarding_complete',
+              ]);
             } catch (e) {
               // non-critical
             }

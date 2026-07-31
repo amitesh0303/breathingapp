@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -92,19 +92,22 @@ function FloatingParticle({ delay, size, startX, startY, color }) {
 }
 
 export default function GradientBackground({ children, colors }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const gradientColors = colors || theme.gradients.background;
 
-  const particles = useRef(
-    Array.from({ length: NUM_PARTICLES }, (_, i) => ({
-      id: i,
-      delay: i * 500,
-      size: 6 + Math.random() * 12,
-      startX: Math.random() * SCREEN_WIDTH * 0.8,
-      startY: Math.random() * SCREEN_HEIGHT * 0.8,
-      color: i % 2 === 0 ? theme.colors.primary : theme.colors.accent,
-    }))
-  ).current;
+  // Regenerate particle configs when theme changes so colors stay in sync
+  const particles = useMemo(
+    () =>
+      Array.from({ length: NUM_PARTICLES }, (_, i) => ({
+        id: `${i}-${isDark ? 'dark' : 'light'}`,
+        delay: i * 500,
+        size: 6 + Math.random() * 12,
+        startX: Math.random() * SCREEN_WIDTH * 0.8,
+        startY: Math.random() * SCREEN_HEIGHT * 0.8,
+        color: i % 2 === 0 ? theme.colors.primary : theme.colors.accent,
+      })),
+    [isDark, theme.colors.primary, theme.colors.accent]
+  );
 
   return (
     <View style={StyleSheet.absoluteFillObject}>

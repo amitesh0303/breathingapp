@@ -1,20 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ACHIEVEMENT_DEFINITIONS } from '../constants/achievements';
 
 const SESSION_HISTORY_KEY = '@session_history';
 const ACHIEVEMENTS_KEY = '@achievements';
 
-const ACHIEVEMENT_DEFINITIONS = [
-  { id: 'first_session', title: 'First Breath', description: 'Complete your first session', icon: 'star' },
-  { id: 'three_day_streak', title: 'Three Day Flow', description: 'Maintain a 3-day streak', icon: 'flame' },
-  { id: 'seven_day_streak', title: 'Weekly Warrior', description: 'Maintain a 7-day streak', icon: 'trophy' },
-  { id: 'thirty_day_streak', title: 'Monthly Master', description: 'Maintain a 30-day streak', icon: 'crown' },
-  { id: 'hundred_sessions', title: 'Century Club', description: 'Complete 100 sessions', icon: 'medal' },
-  { id: 'early_bird', title: 'Early Bird', description: 'Complete a session before 7am', icon: 'sunrise' },
-  { id: 'night_owl', title: 'Night Owl', description: 'Complete a session after 10pm', icon: 'moon' },
-  { id: 'five_minutes', title: 'Deep Focus', description: 'Complete a 5+ minute session', icon: 'clock' },
-  { id: 'marathon', title: 'Marathon Breather', description: 'Complete a 10+ minute session', icon: 'rocket' },
-];
+// Maximum sessions to keep in memory/storage to prevent unbounded growth
+const MAX_STORED_SESSIONS = 500;
 
 const SessionContext = createContext(undefined);
 
@@ -129,6 +121,18 @@ export function SessionProvider({ children }) {
   const [sessions, setSessions] = useState([]);
   const [achievements, setAchievements] = useState([]);
 
+  // Use refs to avoid stale closure in addSession
+  const sessionsRef = useRef(sessions);
+  const achievementsRef = useRef(achievements);
+
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  useEffect(() => {
+    achievementsRef.current = achievements;
+  }, [achievements]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -151,31 +155,42 @@ export function SessionProvider({ children }) {
     }
   };
 
-  const addSession = useCallback(
-    async (session) => {
-      const newSession = {
-        id: Date.now().toString(),
-        ...session,
-      };
+  const addSession = useCallback(async (session) => {
+    const newSession = {
+      id: Date.now().toString(),
+      ...session,
+    };
 
-      const updatedSessions = [...sessions, newSession];
-      setSessions(updatedSessions);
-
-      const { currentStreak } = calculateStreak(updatedSessions);
-      const updatedAchievements = checkAchievements(updatedSessions, currentStreak, achievements);
-      setAchievements(updatedAchievements);
-
-      try {
-        await Promise.all([
-          AsyncStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(updatedSessions)),
-          AsyncStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updatedAchievements)),
-        ]);
-      } catch (error) {
-        // Persist failure is non-critical
+    // Use functional updater to avoid stale closure over sessions
+    let updatedSessions;
+    setSessions((prev) => {
+      updatedSessions = [...prev, newSession];
+      // Trim to MAX_STORED_SESSIONS to prevent unbounded growth
+      if (updatedSessions.length > MAX_STORED_SESSIONS) {
+        updatedSessions = updatedSessions.slice(updatedSessions.length - MAX_STORED_SESSIONS);
       }
-    },
-    [sessions, achievements]
-  );
+      return updatedSessions;
+    });
+
+    // Use ref for achievements to get the latest value
+    const currentAchievements = achievementsRef.current;
+    const currentSessions = [...sessionsRef.current, newSession];
+    const { currentStreak } = calculateStreak(currentSessions);
+    const updatedAchievements = checkAchievements(currentSessions, currentStreak, currentAchievements);
+    setAchievements(updatedAchievements);
+
+    try {
+      const sessionsToStore = currentSessions.length > MAX_STORED_SESSIONS
+        ? currentSessions.slice(currentSessions.length - MAX_STORED_SESSIONS)
+        : currentSessions;
+      await Promise.all([
+        AsyncStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(sessionsToStore)),
+        AsyncStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(updatedAchievements)),
+      ]);
+    } catch (error) {
+      // Persist failure is non-critical
+    }
+  }, []);
 
   const getStats = useCallback(() => {
     const completedSessions = sessions.filter((s) => s.completed);
