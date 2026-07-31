@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Build all application screens using expo-router file-based routing: onboarding flow, home dashboard, breathing session screen (with the enhanced breathing animation), stats/history screen, and settings screen. Each screen uses the theme system and shared UI components from FEAT-002.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create app/onboarding.jsx - A beautiful welcome/onboarding screen with: app name and tagline with fade-in animation, 2-3 swipeable benefit cards (reduce stress, improve focus, better sleep) with illustrations using gradient shapes, a 'Get Started' button that navigates to home and marks onboarding complete in AsyncStorage",
     "Create app/(tabs)/_layout.jsx - Tab navigation layout with custom styled tab bar (glassmorphism effect, icons from @expo/vector-icons), 4 tabs: Home, Breathe, Stats, Settings",

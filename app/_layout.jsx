@@ -14,8 +14,13 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: '#0a0a1a' },
+              animation: 'fade',
             }}
-          />
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
         </SessionProvider>
       </SettingsProvider>
     </ThemeProvider>

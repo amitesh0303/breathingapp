@@ -1,37 +1,44 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import GradientBackground from '../src/components/ui/GradientBackground';
 
-export default function HomeScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Breathe</Text>
-        <Text style={styles.subtitle}>Your mindful breathing companion</Text>
-      </View>
-    </SafeAreaView>
-  );
+export default function IndexScreen() {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    checkOnboarding();
+  }, []);
+
+  const checkOnboarding = async () => {
+    try {
+      const value = await AsyncStorage.getItem('@onboarding_complete');
+      if (value === 'true') {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/onboarding');
+      }
+    } catch (e) {
+      router.replace('/onboarding');
+    }
+    setChecking(false);
+  };
+
+  if (checking) {
+    return (
+      <GradientBackground>
+        <View style={styles.container} />
+      </GradientBackground>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a1a',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#94a3b8',
-    textAlign: 'center',
   },
 });
